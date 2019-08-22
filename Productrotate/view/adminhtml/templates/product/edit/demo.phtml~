@@ -1,0 +1,117 @@
+<?php 
+//getting product id
+$product=$block->getProduct();
+$productId = $product->getId();
+//passing product id to session
+$block->getCatalogSession()->setProductId($productId);
+
+?>
+
+
+<div class="form_parent">
+ <form class="form" method="post" id="frm_attachment" enctype="multipart/form-data" autocomplete="off">
+  <div class="admin__field field field-email">
+  <div>
+   <label class="label admin__field-label" style="display:inline;"><b>Upload Zip</b></label>
+   <div class="admin__field-control control"  style="display:inline;">
+    <button type="button" class="scalable action-show-hide" id="uploadAttachment"><span><span><span>Upload</span></span></span></button>
+    <input type="file" id="attachment" name="attachment" style="visibility: hidden;"/>
+   </div>
+   </div>
+   <input type="hidden" name="productId" value="<?php echo $productId;?>"/>
+   <?php echo $block->getBlockHtml('formkey')?>
+   <div id="return_message"></div>
+  </div>
+ </form>
+</div>
+<div id="attachmentFiles">
+<?php $i=0;foreach($block->getProductFiles() as $post): $url=$block->getBaseUrl().$post['image']; $fname=substr($url, strrpos($url, '/') + 1);?>
+		<div class="image item base-image" data-role="image" id="<?php echo $i;?>">
+	  <div class="product-image-wrapper" id="<?php echo $post['sort_order'];?>" accesskey="<?php echo $post['product_id'];?>">
+	 	 <img class="product-image" data-role="image-element" src="<?php echo  $url; ?>" alt="">
+	  						<div class="actions">
+	            <button type="button" class="action-remove" data-role="delete-button" data-image="<?php echo $fname;?>" title="Delete image"><span>Delete image</span></button>
+	        </div>
+	        <div class="image-fade"><span>Hidden</span></div>
+	    </div>
+	    <div class="item-description"  id="">
+	        <div class="item-title" data-role="img-title"></div>
+	        <div class="item-size">
+	            <a href="<?php echo  $url; ?>" target="_blank"><span data-role="image-dimens"><?php echo $fname;?></span></a>
+	        </div>
+	    </div>
+		</div>
+		<?php $i++;endforeach; ?>
+	</div>
+<script>
+    require(['jquery'], function ($) {
+        $(document).ready(function ($) {
+            
+            $(document).on('click', '#attachmentFiles .action-remove', function(){
+               if (window.confirm("Are you sure you want to delete?")) {
+                   var attachmentPath = $(this).attr("data-image");
+                   var divID = $(this).parents(".base-image").attr("id");
+                   var imageID = $(this).parents(".base-image").find(".hiddneattachID").val();
+                   var productID = $(this).parents(".product-image-wrapper").attr("accesskey");
+                   var sortOrder = $(this).parents(".product-image-wrapper").attr("id");
+                  
+                   jQuery.ajax({
+                        url: "<?php echo $block->getUrl('productrotate/fileupload/deletefile');?>",
+                        type: "POST",
+                        data: {filename: attachmentPath, form_key: window.FORM_KEY, imageID:imageID,productID:productID,sortOrder:sortOrder},
+                        showLoader: true,
+                        success: function (response) {
+                            if(response.success == true){
+                                $(".base-image#"+divID).remove();
+                            }
+                            $("#return_message").css('background','#F5D9B2');
+		                  	 $("#return_message").css('border','solid 1px #EAAB6A');
+		                  	 $("#return_message").css('padding','10px');
+		                  	 $("#return_message").css('margin-top','10px');
+		                  	 $("#return_message").html(response.message);
+                        },
+                       error: function (response) {
+                            $("#return_message").css('background','#F5D9B2');
+		                  	 $("#return_message").css('border','solid 1px #EAAB6A');
+		                  	 $("#return_message").css('padding','10px');
+		                  	 $("#return_message").css('margin-top','10px');
+		                  	 $("#return_message").html(response.message);
+                       }
+                    });
+               } 
+            });
+            
+            $('#uploadAttachment').click(function(){ $('#attachment').trigger('click'); });
+            
+            $("#attachment").change(function(){
+                var data = $("#frm_attachment").get(0);
+                
+                jQuery.ajax({
+                     url: "<?php echo $block->getUrl('productrotate/fileupload/savefiles?isAjax=true');?>",
+                     type: "POST",
+                     data: new FormData(data),
+                     processData: false,
+                     contentType: false,
+                     showLoader: true,
+                     success: function (response) {
+                     	 
+	                  	 $("#return_message").css('background','#F5D9B2');
+	                  	 $("#return_message").css('border','solid 1px #EAAB6A');
+	                  	 $("#return_message").css('padding','10px');
+	                  	 $("#return_message").css('margin-top','10px');
+	                  	 $("#return_message").html(response.message);
+	                      if(response.error==false)
+                     	 {
+	                         $("#attachmentFiles").html(response.data);
+	                         $('#frm_attachment')[0].reset();
+                      	 }
+                     },
+                    error: function (response) {
+                         alert(response.message);
+                         $('#frm_attachment')[0].reset();
+                    }
+                 });
+            });
+        });
+    });
+</script>

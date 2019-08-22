@@ -1,0 +1,97 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// @codingStandardsIgnoreFile
+
+/**
+ * Product media data template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Gallery
+ */
+?>
+
+<?php
+    $images = $block->getGalleryImages()->getItems();
+    $mainImage = current(array_filter($images, function ($img) use ($block) {
+        return $block->isMainImage($img);
+    }));
+
+    if (!empty($images) && empty($mainImage)) {
+        $mainImage = $block->getGalleryImages()->getFirstItem();
+    }
+
+    $helper = $block->getData('imageHelper');
+    $mainImageData = $mainImage ?
+        $mainImage->getData('medium_image_url') :
+        $helper->getDefaultPlaceholderUrl('image');
+        
+    $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
+	 $product = $objectManager->get('\Magento\Framework\Registry')->registry('current_product');
+	 $_product_id = $product->getId();
+			
+if (count(glob("pub/media/360images/".$_product_id ."/*")) > 5 ) {
+?>
+<button type="button" class="action primary" data-trigger="trigger" id="360button" onclick="document.getElementById('view360_example').style.display='';">
+    <span data-bind="i18n: '360 View'"></span>
+</button>
+<div data-bind="mageInit: {
+        'Magento_Ui/js/modal/modal':{
+            'type': 'popup',
+            'title': '360 View',
+            'trigger': '[data-trigger=trigger]',
+            'responsive': true
+        }}">
+    <div class="content" style="text-align:center">
+        <div id="view360_example" style="display:none;">
+		<a href="#" class="autorotate">Play</a>
+		</div>
+		
+        <script>
+			require([
+				'jquery',
+				'tickslus',
+				'rainbow'
+			], function ($) {
+				$(document).ready(function () {
+					$('#360button').click(function(){ $('#view360_example').show(); });
+					jQuery("#view360_example").tikslus360({
+						imageDir:'pub/media/360images/<?= /* @escapeNotVerified */ $_product_id ?>',
+						imageCount:36,
+						imageExt:'jpg',
+						canvasID:'canvas1',
+						zoomPower:1,
+						canvasWidth:640,
+						canvasHeight:480,
+						autoRotate:true
+					});
+				});
+			});
+		</script>
+    </div>
+</div>
+<?php }?>
+<div class="gallery-placeholder _block-content-loading" data-gallery-role="gallery-placeholder">
+    <img
+        alt="main product photo"
+        class="gallery-placeholder__image"
+        src="<?= /* @noEscape */ $mainImageData ?>"
+    />
+</div>
+
+<script type="text/x-magento-init">
+    {
+        "[data-gallery-role=gallery-placeholder]": {
+            "mage/gallery/gallery": {
+                "mixins":["magnifier/magnify"],
+                "magnifierOpts": <?= /* @escapeNotVerified */ $block->getMagnifier() ?>,
+                "data": <?= /* @escapeNotVerified */ $block->getGalleryImagesJson() ?>,
+                "options": <?= /* @noEscape */ $block->getGalleryOptions()->getOptionsJson() ?>,
+                "fullscreen": <?= /* @noEscape */ $block->getGalleryOptions()->getFSOptionsJson() ?>,
+                "breakpoints": <?= /* @escapeNotVerified */ $block->getBreakpoints() ?>
+            }
+        }
+    }
+</script>

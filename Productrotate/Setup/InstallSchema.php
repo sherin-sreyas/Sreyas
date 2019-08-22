@@ -1,0 +1,68 @@
+<?php
+/**
+* Sreyas IT Solutions
+*
+* This source file is subject to the Sreyas IT Solutions Software License, which is available at https://www.sreyas.com/license/.
+* Do not edit or add to this file if you wish to upgrade the to newer versions in the future.
+* If you wish to customize this module for your needs.
+* Please refer to http://www.magentocommerce.com for more information.
+*
+* @category  Sreyas
+* @package   sreyas/module-360view
+* @version   2.0.44
+* @copyright Copyright (C) 2019 Sreyas IT Solutions Pvt Ltd. (https://www.sreyas.com/)
+*/ 
+
+namespace Sreyas\Productrotate\Setup;
+
+use Magento\Framework\Setup\InstallSchemaInterface;
+use Magento\Framework\Setup\ModuleContextInterface;
+use Magento\Framework\Setup\SchemaSetupInterface;
+
+/**
+ * @codeCoverageIgnore
+ */
+class InstallSchema implements InstallSchemaInterface
+{
+    /**
+    * {@inheritdoc}
+    * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
+    */
+    public function install(SchemaSetupInterface $setup, ModuleContextInterface $context)
+    {
+          /**
+          * Create table 'catalog_product_360'
+          */
+          $table = $setup->getConnection()
+              ->newTable($setup->getTable('catalog_product_360'))
+              ->addColumn(
+                  'image_id',
+                  \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
+                  null,
+                  ['identity' => true, 'unsigned' => true, 'nullable' => false, 'primary' => true],
+                  'Image ID'
+              )
+              ->addColumn(
+                  'product_id',
+                  \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
+                  null,
+                  [ 'unsigned' => true, 'nullable' => false],
+                  'Product ID'
+              )
+              ->addColumn(
+                  'image',
+                  \Magento\Framework\DB\Ddl\Table::TYPE_TEXT,
+                  255,
+                  ['nullable' => false, 'default' => ''],
+                    'Image Path' )
+              ->addColumn(
+                  'sort_order',
+                  \Magento\Framework\DB\Ddl\Table::TYPE_INTEGER,
+                  null,
+                  [ 'unsigned' => true, 'nullable' => false],
+                  'Sort Order'
+              )   
+                    ->setComment("Product 360 images table");
+          $setup->getConnection()->createTable($table);
+      }
+}
